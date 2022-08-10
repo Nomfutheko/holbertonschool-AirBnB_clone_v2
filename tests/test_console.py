@@ -119,3 +119,6 @@ class TestConsole(unittest.TestCase):
             self.consol.onecmd("destroy BaseModel 2aq3wsed5rf6tg7yh8")
             self.assertEqual(
                 "** no instance found **\n", f.getvalue())
+
+if __name__ == "__main__":
+    unittest.main()
