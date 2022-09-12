@@ -1,7 +1,7 @@
--- Script to create a MySQL server with the database hbnb_dev_db.
+-- Creates a database and a developer user granting specific permissions on
+-- certain databases
 CREATE DATABASE IF NOT EXISTS hbnb_dev_db;
-CREATE USER IF NOT EXISTS 'hbnb_dev'@'localhost';
-SET PASSWORD FOR 'hbnb_dev'@'localhost' = 'hbnb_dev_pwd';
-GRANT USAGE ON *.* TO 'hbnb_dev'@'localhost';
-GRANT SELECT ON `performance_schema`.* TO 'hbnb_dev'@'localhost';
-GRANT ALL PRIVILEGES ON `hbnb_dev_db`.* TO 'hbnb_dev'@'localhost';
+USE hbnb_dev_db;
+CREATE USER IF NOT EXISTS 'hbnb_dev'@'localhost' IDENTIFIED BY 'hbnb_dev_pwd';
+GRANT ALL PRIVILEGES ON hbnb_dev_db.* TO 'hbnb_dev'@'localhost';
+GRANT SELECT ON performance_schema.* TO 'hbnb_dev'@'localhost';

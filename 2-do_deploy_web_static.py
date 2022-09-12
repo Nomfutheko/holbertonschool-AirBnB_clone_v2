@@ -1,42 +1,54 @@
 #!/usr/bin/python3
-"""Script (based on the file 1-pack_web_static.py) that distributes an
-archive to your web servers, using the function do_deploy.
-"""
-from datetime import datetime as dt
+""" Transfers file from local to remote """
 from fabric.api import *
-import os
+import datetime
 
+
+env.use_ssh_config = True
+env.hosts = ['35.237.82.133', '35.196.231.32']
 env.user = 'ubuntu'
-env.hosts = ["104.196.209.226", "34.75.152.150"]
+env.key_filename = '~/.ssh/holberton'
+date = datetime.datetime.now().strftime("%Y%m%d%I%M%S")
+
+
+def transfer():
+    """ transfers a specific file """
+    put('./0-setup_web_static.sh', '/tmp/')
 
 
 def do_pack():
-    """File compressor"""
-    try:
-        timestamp = dt.now().strftime("%Y%m%d%H%M%S")
-        filepath = "./versions/web_static_{}".format(timestamp)
-        local('mkdir -p ./versions')
-        file = local('tar -cvzf {}.tgz web_static'.format(filepath))
-        return file
-    except:
-        return None
+    """
+        Generates a .tgz archive from the contents of web_static folder
+        Return: the archive path if the archive has been correctly generated
+        Otherwise Return: None
+    """
+    local("mkdir -p ./versions")
+    local("tar czvf ./versions/web_static_{}.tgz ./web_static/*".format(date))
 
 
 def do_deploy(archive_path):
-    """Deploy the files to the servers"""
-    if os.path.exists(archive_path):
-        cloudpath = "/data/web_static/releases/" + archive_path[:-4]
-        archive = archive_path.split('/')[-1]
-        current = "/data/web_static/current"
-        put(archive_path, '/tmp')
-        run("mkdir -p {}".format(cloudpath))
-        run("tar -xzf /tmp/{} -C {}".format(archive, cloudpath))
-        run("rm /tmp/{}".format(archive))
-        run("mv {}/web_static/* {}".format(cloudpath, cloudpath))
-        run("rm -rf {}/web_static".format(cloudpath))
-        run("rm -rf {}".format(current))
-        run("ln -s {} {}".format(cloudpath, current))
-        print('New version deployed!')
+    """ Distributes an archive to multiple webservers """
+    try:
+        if not archive_path:
+            return False
+        try:
+            name = archive_path.split('/')[-1]
+        except:
+            name = archive_path
+
+        put(archive_path, '/tmp/')
+        run("mkdir -p /data/web_static/releases/{}/".format(name[:-4]))
+        with cd('/tmp/'):
+            run('tar xzf {} -C /data/web_static/releases/{}/'.format(name,
+                name[:-4]))
+            sudo('rm ./{}'.format(name))
+        with cd('/data/web_static/'):
+            run('mv releases/{}/web_static/*\
+                    /data/web_static/releases/{}/'
+                .format(name[:-4], name[:-4]))
+            run('rm -rf ./current')
+            run('ln -s /data/web_static/releases/{}/\
+                    /data/web_static/current'.format(name[:-4]))
         return True
-    else:
+    except:
         return False
